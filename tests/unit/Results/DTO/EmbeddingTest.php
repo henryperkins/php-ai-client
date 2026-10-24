@@ -79,32 +79,33 @@ class EmbeddingTest extends TestCase
      *
      * @param list<float> $values
      */
-    public function testValuesMustBeFinite(array $values, int $index): void
+    public function testValuesMustBeFinite(array $values, string $value, int $index): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches(
-            '/^Embedding values must be finite numbers\. Non-finite value found at index ' . $index . '\.$/'
+            '/^Embedding values must be finite numbers\. Non-finite value ' . preg_quote($value, '/')
+            . ' found at index ' . $index . '\.$/'
         );
 
         new Embedding($values, count($values));
     }
 
     /**
-     * @return array<string, array{list<float>, int}>
+     * @return array<string, array{list<float>, string, int}>
      */
     public static function nonFiniteValueProvider(): array
     {
         return [
-            'NAN first'      => [[NAN, 0.2, 0.3], 0],
-            'NAN middle'     => [[0.1, NAN, 0.3], 1],
-            'NAN last'       => [[0.1, 0.2, NAN], 2],
-            'INF first'      => [[INF, 0.2, 0.3], 0],
-            'INF middle'     => [[0.1, INF, 0.3], 1],
-            'INF last'       => [[0.1, 0.2, INF], 2],
-            '-INF first'     => [[-INF, 0.2, 0.3], 0],
-            '-INF middle'    => [[0.1, -INF, 0.3], 1],
-            '-INF last'      => [[0.1, 0.2, -INF], 2],
-            'INF before NAN' => [[0.1, INF, NAN], 1],
+            'NAN first'      => [[NAN, 0.2, 0.3], 'NAN', 0],
+            'NAN middle'     => [[0.1, NAN, 0.3], 'NAN', 1],
+            'NAN last'       => [[0.1, 0.2, NAN], 'NAN', 2],
+            'INF first'      => [[INF, 0.2, 0.3], 'INF', 0],
+            'INF middle'     => [[0.1, INF, 0.3], 'INF', 1],
+            'INF last'       => [[0.1, 0.2, INF], 'INF', 2],
+            '-INF first'     => [[-INF, 0.2, 0.3], '-INF', 0],
+            '-INF middle'    => [[0.1, -INF, 0.3], '-INF', 1],
+            '-INF last'      => [[0.1, 0.2, -INF], '-INF', 2],
+            'INF before NAN' => [[0.1, INF, NAN], 'INF', 1],
         ];
     }
 

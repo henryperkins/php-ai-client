@@ -53,6 +53,7 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
 
             // A non-numeric value is reported over a non-finite one, regardless of position.
             $nonFiniteIndex = null;
+            $nonFiniteValue = null;
             foreach ($values as $index => $value) {
                 if (!is_int($value) && !is_float($value)) {
                     throw new InvalidArgumentException('Embedding values must be integers or floats.');
@@ -60,11 +61,13 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
 
                 if ($nonFiniteIndex === null && !is_finite($value)) {
                     $nonFiniteIndex = $index;
+                    $nonFiniteValue = $value;
                 }
             }
 
             throw new InvalidArgumentException(sprintf(
-                'Embedding values must be finite numbers. Non-finite value found at index %d.',
+                'Embedding values must be finite numbers. Non-finite value %s found at index %d.',
+                (string) $nonFiniteValue,
                 $nonFiniteIndex
             ));
         }

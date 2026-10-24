@@ -127,24 +127,24 @@ class EmbeddingResultTest extends TestCase
      *
      * @param list<list<float>> $embeddings
      */
-    public function testRejectsNonFiniteEmbeddingValues(array $embeddings, int $index): void
+    public function testRejectsNonFiniteEmbeddingValues(array $embeddings, string $value, int $index): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            'Embedding values must be finite numbers. Non-finite value found at index ' . $index . '.'
+            'Embedding values must be finite numbers. Non-finite value ' . $value . ' found at index ' . $index . '.'
         );
 
         $this->createEmbeddingResult($embeddings);
     }
 
     /**
-     * @return array<string, array{list<list<float>>, int}>
+     * @return array<string, array{list<list<float>>, string, int}>
      */
     public static function nonFiniteEmbeddingsProvider(): array
     {
         return [
-            'NAN in first embedding'  => [[[0.1, NAN, 0.3], [0.4, 0.5, 0.6]], 1],
-            'INF in second embedding' => [[[0.1, 0.2, 0.3], [0.4, 0.5, INF]], 2],
+            'NAN in first embedding'  => [[[0.1, NAN, 0.3], [0.4, 0.5, 0.6]], 'NAN', 1],
+            'INF in second embedding' => [[[0.1, 0.2, 0.3], [0.4, 0.5, INF]], 'INF', 2],
         ];
     }
 
