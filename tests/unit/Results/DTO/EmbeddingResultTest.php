@@ -19,11 +19,15 @@ use WordPress\AiClient\Results\DTO\TokenUsage;
  */
 class EmbeddingResultTest extends TestCase
 {
-    private function createEmbeddingResult(): EmbeddingResult
-    {
+    /**
+     * @param list<list<float|int>> $embeddings
+     */
+    private function createEmbeddingResult(
+        array $embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
+    ): EmbeddingResult {
         return new EmbeddingResult(
             'embedding-result-id',
-            [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
+            $embeddings,
             3,
             new TokenUsage(4, 0, 4),
             new ProviderMetadata('mock', 'Mock Provider', ProviderTypeEnum::cloud()),
@@ -116,5 +120,40 @@ class EmbeddingResultTest extends TestCase
         );
 
         $this->assertSame([0.1, 0.2, 0.3], $result->getEmbedding()->getValues());
+    }
+
+    /**
+     * @dataProvider nonFiniteEmbeddingsProvider
+     *
+     * @param list<list<float>> $embeddings
+     */
+    public function testRejectsNonFiniteEmbeddingValues(array $embeddings, int $index): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Embedding values must be finite numbers. Non-finite value found at index ' . $index . '.'
+        );
+
+        $this->createEmbeddingResult($embeddings);
+    }
+
+    /**
+     * @return array<string, array{list<list<float>>, int}>
+     */
+    public static function nonFiniteEmbeddingsProvider(): array
+    {
+        return [
+            'NAN in first embedding'  => [[[0.1, NAN, 0.3], [0.4, 0.5, 0.6]], 1],
+            'INF in second embedding' => [[[0.1, 0.2, 0.3], [0.4, 0.5, INF]], 2],
+        ];
+    }
+
+    public function testArrayRoundTripWithFiniteEdgeValues(): void
+    {
+        $embeddings = [[PHP_FLOAT_MAX, -PHP_FLOAT_MAX, 0.0], [-0.0, 5e-324, 1]];
+        $result = $this->createEmbeddingResult($embeddings);
+
+        $this->assertSame($embeddings, $result->toArray()[EmbeddingResult::KEY_EMBEDDINGS]);
+        $this->assertEquals($result, EmbeddingResult::fromArray($result->toArray()));
     }
 }

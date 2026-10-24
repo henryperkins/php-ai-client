@@ -51,13 +51,22 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
                 throw new InvalidArgumentException('Embedding values must be a list array.');
             }
 
-            throw new InvalidArgumentException('Embedding values must be integers or floats.');
-        }
+            // A non-numeric value is reported over a non-finite one, regardless of position.
+            $nonFiniteIndex = null;
+            foreach ($values as $index => $value) {
+                if (!is_int($value) && !is_float($value)) {
+                    throw new InvalidArgumentException('Embedding values must be integers or floats.');
+                }
 
-        foreach ($values as $value) {
-            if (is_float($value) && !is_finite($value)) {
-                throw new InvalidArgumentException('Embedding values must be finite numbers.');
+                if ($nonFiniteIndex === null && !is_finite($value)) {
+                    $nonFiniteIndex = $index;
+                }
             }
+
+            throw new InvalidArgumentException(sprintf(
+                'Embedding values must be finite numbers. Non-finite value found at index %d.',
+                $nonFiniteIndex
+            ));
         }
 
         if (count($values) !== $dimensions) {
@@ -69,7 +78,7 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * Checks whether the value is a list of integers or floats.
+     * Checks whether the value is a list of integers or finite floats.
      *
      * @since 1.4.0
      *
@@ -85,7 +94,11 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
         }
 
         foreach ($values as $value) {
-            if (!is_int($value) && !is_float($value)) {
+            if (is_int($value)) {
+                continue;
+            }
+
+            if (!is_float($value) || !is_finite($value)) {
                 return false;
             }
         }
