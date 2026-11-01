@@ -57,7 +57,11 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
                     continue;
                 }
 
-                $description = is_float($value) ? (string) $value : gettype($value);
+                if (is_float($value)) {
+                    $description = is_nan($value) ? 'NAN' : (string) $value;
+                } else {
+                    $description = gettype($value);
+                }
 
                 $message .= sprintf(' Invalid value at index %d: %s.', $index, $description);
                 break;
