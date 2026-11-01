@@ -51,13 +51,19 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
                 throw new InvalidArgumentException('Embedding values must be a list array.');
             }
 
-            throw new InvalidArgumentException('Embedding values must be integers or floats.');
-        }
+            $message = 'Embedding values must be integers or finite floats.';
+            foreach ($values as $index => $value) {
+                if (is_int($value) || (is_float($value) && is_finite($value))) {
+                    continue;
+                }
 
-        foreach ($values as $value) {
-            if (is_float($value) && !is_finite($value)) {
-                throw new InvalidArgumentException('Embedding values must be finite numbers.');
+                $description = is_float($value) ? (string) $value : gettype($value);
+
+                $message .= sprintf(' Invalid value at index %d: %s.', $index, $description);
+                break;
             }
+
+            throw new InvalidArgumentException($message);
         }
 
         if (count($values) !== $dimensions) {
@@ -69,7 +75,7 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * Checks whether the value is a list of integers or floats.
+     * Checks whether the value is a list of integers or finite floats.
      *
      * @since 1.4.0
      *
@@ -85,7 +91,7 @@ final class Embedding implements Countable, IteratorAggregate, JsonSerializable
         }
 
         foreach ($values as $value) {
-            if (!is_int($value) && !is_float($value)) {
+            if (!is_int($value) && (!is_float($value) || !is_finite($value))) {
                 return false;
             }
         }
